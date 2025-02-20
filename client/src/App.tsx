@@ -1,39 +1,29 @@
-import Editor, {  Monaco, OnChange, OnMount, OnValidate } from "@monaco-editor/react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import Home from "./pages/Home";
+import MonacoEditor from "./components/MonacoEditor";
+import ThemeProvider from "./providers/ThemeProvider";
 
 function App() {
-  const handleEditorChange: OnChange = (value, event) => {
-    console.log("event: ", event);
-    console.log("value: ", value);
-    // here is the current value
-  };
-
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
-    console.log("onMount: the editor instance:", editor);
-    console.log("onMount: the monaco instance:", monaco);
-  };
-
-  const handleEditorWillMount = (monaco: Monaco) => {
-    console.log("beforeMount: the monaco instance:", monaco);
-  };
-
-  const handleEditorValidation: OnValidate = (markers) => {
-    console.log("markers: ", markers);
-    // model markers
-    // markers.forEach(marker => console.log('onValidate:', marker.message));
-  };
   return (
-    <div>
-      <Editor
-        height="90vh"
-        width={1500}
-        defaultLanguage="javascript"
-        defaultValue="// some comment"
-        onChange={handleEditorChange}
-        onMount={handleEditorDidMount}
-        beforeMount={handleEditorWillMount}
-        onValidate={handleEditorValidation}
-      />
-    </div>
+    <ThemeProvider>
+      <div className="w-full min-h-screen h-screen dark:bg-zinc-800">
+        <BrowserRouter>
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="leaves" element={<Navigate to="/" />}>
+              <Route path=":leafId" element={<MonacoEditor />} />
+            </Route>
+            {/* <Route path="workspaces" element={<WorkSpaces />}>
+          <Route path=":workspaceId" element={<Workspace />}>
+          <Route path="leaves" element={<Navigate to="/workspaces" />}>
+          <Route path="leafId"></Route>
+          </Route>
+          </Route>
+          </Route> */}
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
   );
 }
 
