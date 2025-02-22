@@ -6,7 +6,7 @@ import ThemeProvider from "./providers/ThemeProvider";
 function App() {
   return (
     <ThemeProvider>
-      <div className="w-full min-h-screen h-screen dark:bg-zinc-800">
+      <div className="w-full min-h-screen dark:bg-zinc-800">
         <BrowserRouter>
           <Routes>
             <Route index element={<Home />} />

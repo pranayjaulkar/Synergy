@@ -1,2 +1,11 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer components {
+  .hover-darken {
+    @apply hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-all duration-200
+  }
+  .flex-center {
+    @apply justify-center items-center
+  }
+}

@@ -6,7 +6,7 @@ export default function ThemeSwitch() {
   const { darkMode, setDarkMode } = useContext(ThemeContext)!;
 
   return (
-    <div className="min-h-8 min-w-8 p-2">
+    <div className="min-h-8 min-w-8 p-2 hover-darken ">
       <div
         onClick={() => setDarkMode((prev) => !prev)}
         className="cursor-pointer hover:opacity-50 transition-all duration-100 min-w-6 min-h-6 w-6 h-6"
