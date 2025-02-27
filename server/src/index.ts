@@ -1,14 +1,14 @@
 import express from "express";
-import http from "http";
 import mongoose from "mongoose";
-import { Server } from "socket.io";
+import http from "http";
+import WebSocket from "ws";
+const ywsUtils = require("y-websocket/bin/utils");
 
 const PORT = process.env.PORT || 5000;
 const DB_URL = process.env.DB_URL || "mongodb://localhost:27017/Synergy";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
 mongoose
   .connect(DB_URL)
@@ -19,9 +19,30 @@ app.get("/", async (req, res) => {
   res.set({ "Content-Type": "text/html" }).send(`<h1>Hello World</h1>`);
 });
 
-io.on("connection", (socket) => {
-  console.log("A new user connected", socket);
+const wss = new WebSocket.Server({ server });
+
+wss.on("connection", (conn: WebSocket, req: Request) => {
+  console.log("conn: ", conn);
+  console.log("typeof conn: ", typeof conn);
+  ywsUtils.setupWSConnection(conn, req, {
+    gc: req.url.slice(1) !== "ws/prosemirror-versions",
+  });
 });
 
-app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+setInterval(() => {
+  let conns = 0;
+  ywsUtils.docs.forEach((doc: any) => {
+    conns += doc.conns.size;
+  });
+  const stats = {
+    conns,
+    docs: ywsUtils.docs.size,
+    websocket: `ws://localhost:${PORT}`,
+    http: `http://localhost:${PORT}`,
+  };
+  console.log(
+    `${new Date().toLocaleString("en-IN")} Stats: ${JSON.stringify(stats)}`
+  );
+}, 10000);
 
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
