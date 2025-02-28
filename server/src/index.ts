@@ -22,27 +22,25 @@ app.get("/", async (req, res) => {
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (conn: WebSocket, req: Request) => {
-  console.log("conn: ", conn);
-  console.log("typeof conn: ", typeof conn);
   ywsUtils.setupWSConnection(conn, req, {
     gc: req.url.slice(1) !== "ws/prosemirror-versions",
   });
 });
 
-setInterval(() => {
-  let conns = 0;
-  ywsUtils.docs.forEach((doc: any) => {
-    conns += doc.conns.size;
-  });
-  const stats = {
-    conns,
-    docs: ywsUtils.docs.size,
-    websocket: `ws://localhost:${PORT}`,
-    http: `http://localhost:${PORT}`,
-  };
-  console.log(
-    `${new Date().toLocaleString("en-IN")} Stats: ${JSON.stringify(stats)}`
-  );
-}, 10000);
+// setInterval(() => {
+//   let conns = 0;
+//   ywsUtils.docs.forEach((doc: any) => {
+//     conns += doc.conns.size;
+//   });
+//   const stats = {
+//     conns,
+//     docs: ywsUtils.docs.size,
+//     websocket: `ws://localhost:${PORT}`,
+//     http: `http://localhost:${PORT}`,
+//   };
+//   console.log(
+//     `${new Date().toLocaleString("en-IN")} Stats: ${JSON.stringify(stats)}`
+//   );
+// }, 10000);
 
-app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+server.listen(PORT, () => console.log(`Server listening on ${PORT}`));
