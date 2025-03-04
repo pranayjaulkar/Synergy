@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import { z } from "zod";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "react-router";
-import { loginUser, signUpUser } from "@/services/firebase";
-
-type AuthType = "login" | "signup";
+import { signUpUser, loginUser } from "@/actions/user";
+import { useUserStore } from "@/hooks/useUserStore";
+import toast from "react-hot-toast";
+import { STD_ERR_MSG } from "@/utils/constants";
 
 export default function Auth() {
+  const setUser = useUserStore((state) => state.setUser);
   const [isLogin, setIsLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<FormData>(emptyFormData);
+  const [formData, setFormData] = useState<FormData>(emptyFormData);
   const location = useLocation();
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+
+  const visibleFields = isLogin ? formFields.filter((field) => field.login) : formFields;
 
   const handleAuthChange = (authType: AuthType) => {
+    setErrors((prev) => ({ ...prev, ...emptyFormData }));
     setIsLogin(authType === "login");
   };
 
@@ -24,18 +32,50 @@ export default function Auth() {
   };
 
   const handleAuth = async (authType: AuthType) => {
-    if (authType === "login") {
-      const user = await loginUser({ email: formData.email, password: formData.password });
-      console.log("user: ", user);
-    } else {
-      const user = await signUpUser({ email: formData.email, password: formData.password });
-      console.log("user : ", user);
+    try {
+      const result = validate(formData);
+      if (!result.isValid) {
+        setErrors(result.errors || emptyFormData);
+        return;
+      }
+
+      setErrors(emptyFormData);
+      setIsLoading(true);
+
+      let response;
+      if (authType === "login") {
+        response = await loginUser({ email: formData.email, password: formData.password });
+      } else {
+        response = await signUpUser({
+          name: formData.name,
+          confirmPassword: formData.confirmPassword,
+          email: formData.email,
+          password: formData.password,
+        });
+      }
+
+      if (response?.data) {
+        setUser(response.data);
+      } else if (response.error && typeof response.error.message) {
+        if (errorCodeToFieldMap[response.error.code])
+          setErrors((prev) => ({
+            ...prev,
+            [errorCodeToFieldMap[response.error.code]]: response.error.message,
+          }));
+      } else {
+        toast.error(STD_ERR_MSG);
+      }
+    } catch (error) {
+      console.log("error: ", error);
+      toast.error(STD_ERR_MSG);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     setIsLogin(location.pathname === "/login");
-  }, []);
+  }, [location.pathname]);
 
   return (
     <div className="flex flex-col w-screen h-screen bg-white dark:bg-zinc-950">
@@ -49,57 +89,100 @@ export default function Auth() {
             Sign up
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>Log In to Synergy</CardTitle>
-              <CardDescription>Enter your email and password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="space-y-1">
-                <Label htmlFor="email">Email</Label>
-                <Input name="email" id="email" onChange={handleFormDataChange} type="email" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="password">Password</Label>
-                <Input name="password" id="password" onChange={handleFormDataChange} type="password" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleAuth("login")}>Log In</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        <TabsContent value="signup">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sign Up with Synergy</CardTitle>
-              <CardDescription>Enter your email, name and password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="space-y-1">
-                <Label htmlFor="name">Name</Label>
-                <Input name="name" id="name" onChange={handleFormDataChange} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="email">Email</Label>
-                <Input name="email" id="email" onChange={handleFormDataChange} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="password">Password</Label>
-                <Input name="password" id="password" onChange={handleFormDataChange} type="password" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input name="confirmPassword" id="confirmPassword" onChange={handleFormDataChange} type="password" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleAuth("signup")}>Sign Up</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+        {tabs.map((tab, index) => (
+          <TabsContent key={index} value={tab.value}>
+            <Card>
+              <CardHeader>
+                <CardTitle>{tab.title}</CardTitle>
+                <CardDescription>{tab.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {visibleFields.map((field, index) => (
+                  <div key={index} className="space-y-1 mb-1">
+                    <Label htmlFor={field.key}>{field.label}</Label>
+                    <Input name={field.key} type={field.type} id={field.key} onChange={handleFormDataChange} />
+                    {errors[field.key as keyof FormData] && <span className="text-red-500">{errors[field.key as keyof FormData]}</span>}
+                  </div>
+                ))}
+              </CardContent>
+              <CardFooter>
+                <Button disabled={isLoading} onClick={() => handleAuth(tab.value as AuthType)}>
+                  {tab.value === "login" ? "Log In" : "Sign Up"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
 }
+
+const formDataSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email(),
+    password: z.string().min(8, "Password must be atleast 8 characters long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type AuthType = "login" | "signup";
+
+type FormData = z.infer<typeof formDataSchema>;
+
+const emptyFormData: FormData = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
+
+const formFields = [
+  {
+    label: "Name",
+    type: "text",
+    key: "name",
+  },
+  {
+    label: "Email",
+    type: "email",
+    key: "email",
+    login: true,
+  },
+  {
+    label: "Password",
+    type: "password",
+    key: "password",
+    login: true,
+  },
+  {
+    label: "Confirm Password",
+    type: "password",
+    key: "confirmPassword",
+  },
+];
+
+const tabs = [
+  { label: "Log In", title: "Log in to Synergy", description: "Enter your email and password", value: "login" },
+  { label: "Sign Up", title: "Sign up with Synergy", description: "Enter your email, name and password", value: "signup" },
+];
+
+const errorCodeToFieldMap: Record<string, keyof FormData> = {
+  "invalid-email": "email",
+  "email-already-in-use": "email",
+};
+
+const validate = (formData: FormData) => {
+  const errors = { ...emptyFormData };
+  const { success, error } = formDataSchema.safeParse(formData);
+  if (error && error.issues?.length) {
+    error.issues?.map((issue) => {
+      errors[issue.path[0] as keyof FormData] = issue.message;
+    });
+  }
+  return { isValid: success, errors };
+};

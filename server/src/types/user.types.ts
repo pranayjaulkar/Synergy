@@ -1,11 +1,4 @@
-export type User = {
-  name: string;
-  email: string;
-  nodes?: string[];
-  workspaces?: string[];
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
-};
+import { User } from "../schemas/user.schema";
 
 export type UserLoginData = {
   email: string;
@@ -13,3 +6,5 @@ export type UserLoginData = {
 };
 
 export type UserSignUpData = UserLoginData & { name: string; confirmPassword: string; password: string };
+
+export type { User };
