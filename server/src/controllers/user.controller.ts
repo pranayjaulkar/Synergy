@@ -55,7 +55,10 @@ export const loginUser: RequestHandler = async (req, res) => {
   try {
     user = await loginUserWithEmailAndPassword({ email: userData.email, password: userData.password });
   } catch (error) {
-    console.log("Firebase Auth Error:", error);
+    if (error instanceof FirebaseError) {
+      handleFirebaseErrors(error);
+    }
+    throw new ApiError({ at: "signUpUser" });
   }
 
   res.json(user);

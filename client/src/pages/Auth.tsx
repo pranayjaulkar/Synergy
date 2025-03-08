@@ -33,7 +33,7 @@ export default function Auth() {
 
   const handleAuth = async (authType: AuthType) => {
     try {
-      const result = validate(formData);
+      const result = validate(formData, authType);
       if (!result.isValid) {
         setErrors(result.errors || emptyFormData);
         return;
@@ -130,6 +130,11 @@ const formDataSchema = z
     path: ["confirmPassword"],
   });
 
+const loginFormDataSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, "Invalid Password"),
+});
+
 type AuthType = "login" | "signup";
 
 type FormData = z.infer<typeof formDataSchema>;
@@ -176,11 +181,11 @@ const errorCodeToFieldMap: Record<string, keyof FormData> = {
   "email-already-in-use": "email",
 };
 
-const validate = (formData: FormData) => {
+const validate = (formData: FormData, authType: AuthType) => {
   const errors = { ...emptyFormData };
-  const { success, error } = formDataSchema.safeParse(formData);
+  const { success, error } = authType === "login" ? loginFormDataSchema.safeParse(formData) : formDataSchema.safeParse(formData);
   if (error && error.issues?.length) {
-    error.issues?.map((issue) => {
+    error.issues?.forEach((issue) => {
       errors[issue.path[0] as keyof FormData] = issue.message;
     });
   }

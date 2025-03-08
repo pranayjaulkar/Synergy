@@ -20,7 +20,7 @@ export class ApiError extends Error {
   }
 
   logError() {
-    console.log(`${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} | ${this.at} | ${this.status} | ${this.code} | ${this.data ? this.data : ""}`);
+    console.log(`${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} | ${this.at} | ${this.status} | ${this.code} | ${this.data ? JSON.stringify(this.data) : ""}`);
   }
 }
 
