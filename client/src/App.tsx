@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
 import Home from "./pages/Home";
 import MonacoEditor from "./components/MonacoEditor";
 import ThemeProvider from "./providers/ThemeProvider";
@@ -24,8 +24,8 @@ function App() {
             <Route index element={<Home />} />
             <Route path="/signup" element={<Auth />} />
             <Route path="/login" element={<Auth />} />
-            <Route path="leaves" element={<Navigate to="/" />}>
-              <Route path=":leafId" element={<MonacoEditor />} />
+            <Route path="/editor" element={<MonacoEditor />}>
+              <Route path=":fileId" element={<MonacoEditor />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface INode extends Document {
+export interface Node extends Document {
   name: string;
   type: "FILE" | "FOLDER";
   content?: string;
@@ -9,18 +9,18 @@ export interface INode extends Document {
   collaborators: Schema.Types.ObjectId[];
 }
 
-const nodeSchema = new Schema<INode>(
+const nodeSchema = new Schema<Node>(
   {
     name: { type: String, required: true },
     type: { type: String, enum: ["FILE", "FOLDER"], required: true },
     content: {
       type: String,
-      required: () => (this as unknown as INode).type === "FILE",
+      required: () => (this as unknown as Node).type === "FILE",
     },
     children: {
       type: [Schema.Types.ObjectId],
       ref: "Node",
-      required: () => (this as unknown as INode).type === "FOLDER",
+      required: () => (this as unknown as Node).type === "FOLDER",
     },
     owner: {
       type: Schema.Types.ObjectId,

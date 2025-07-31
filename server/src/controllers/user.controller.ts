@@ -9,7 +9,6 @@ import { FirebaseError } from "firebase/app";
 
 export const signUpUser: RequestHandler = async (req, res) => {
   const userData: UserSignUpData = req.body;
-  console.log("userData: ", userData);
 
   if (!userData || !isValidUser(userData)) {
     throw new ApiError({
