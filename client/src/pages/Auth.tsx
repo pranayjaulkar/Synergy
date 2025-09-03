@@ -1,4 +1,3 @@
-import Navbar from "@/components/Navbar";
 import { z } from "zod";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -79,7 +78,6 @@ export default function Auth() {
 
   return (
     <div className="flex flex-col w-screen h-screen bg-white dark:bg-zinc-950">
-      <Navbar plain={true} />
       <Tabs value={isLogin ? "login" : "signup"} defaultValue={isLogin ? "login" : "signup"} className="mx-auto mt-[15%] w-[400px]">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger onClick={() => handleAuthChange("login")} value="login">

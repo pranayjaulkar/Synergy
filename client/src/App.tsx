@@ -5,6 +5,9 @@ import ThemeProvider from "./providers/ThemeProvider";
 import { useEffect } from "react";
 import Auth from "./pages/Auth";
 import { Toaster } from "react-hot-toast";
+import HomeLayout from "./components/Layouts/HomeLayout";
+import AuthLayout from "./components/Layouts/AuthLayout";
+import EditorLayout from "./components/Layouts/EditorLayout";
 
 function App() {
   useEffect(() => {
@@ -21,11 +24,18 @@ function App() {
       <div className="w-full min-h-screen dark:bg-zinc-950">
         <BrowserRouter>
           <Routes>
-            <Route index element={<Home />} />
-            <Route path="/signup" element={<Auth />} />
-            <Route path="/login" element={<Auth />} />
-            <Route path="/editor" element={<MonacoEditor />}>
-              <Route path=":fileId" element={<MonacoEditor />} />
+            <Route element={<HomeLayout />}>
+              <Route path="/" element={<Home />} />
+            </Route>
+
+            <Route element={<AuthLayout />}>
+              <Route path="/signup" element={<Auth />} />
+              <Route path="/login" element={<Auth />} />
+            </Route>
+            <Route element={<EditorLayout />}>
+              <Route path="/editor" element={<MonacoEditor />}>
+                <Route path=":fileId" element={<MonacoEditor />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
